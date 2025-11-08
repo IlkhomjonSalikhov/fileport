@@ -1,4 +1,5 @@
 const express = require('express');
+app.use(express.static('public'));  // Для статических файлов
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
