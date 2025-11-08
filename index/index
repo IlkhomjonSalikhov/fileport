@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FASTDROP</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="style.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+</head>
+<body>
+  <header>
+    <nav>
+      <div class="logo">FASTDROP</div>
+      <div class="tabs">
+        <div class="tab active" data-tab="home">Главная</div>
+        <div class="tab" data-tab="premium">Премиум</div>
+        <div class="tab" data-tab="about">О нас</div>
+        <div class="tab" data-tab="privacy">Конфиденциальность</div>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <div id="home" class="tab-content active">
+      <div class="hero">
+        <h1>FASTDROP</h1>
+        <p>До 200 ГБ • Бесплатно • 7 дней</p>
+      </div>
+
+      <div class="box">
+        <h2>Кидай файл</h2>
+        <div class="dz" id="dropzone">
+          <i class="fas fa-cloud-upload-alt"></i>
+          <p>Перетащи или кликни</p>
+          <input type="file" id="fileInput" multiple style="display:none"/>
+          <button>ВЫБРАТЬ</button>
+        </div>
+
+        <div class="prog" id="progress">
+          <div class="bar"><div class="fill" id="fill"></div></div>
+          <div class="ptxt" id="percent">0%</div>
+        </div>
+
+        <div class="res" id="result">
+          <p><i class="fas fa-check-circle"></i> Готово!</p>
+          <input type="text" id="link" readonly/>
+          <div class="btns">
+            <button class="copy-btn">COPY</button>
+            <button class="qr-btn">QR</button>
+          </div>
+          <div class="qrcode" id="qrcode"></div>
+          <p class="counter">Загрузок: <span id="downloads">0</span></p>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><h3><span class="count" data-target="127482">0</span></h3><p>Файлов</p></div>
+        <div class="stat"><h3><span class="count" data-target="89">0</span> ТБ</h3><p>Передано</p></div>
+        <div class="stat"><h3><span class="count" data-target="42819">0</span></h3><p>Пользователей</p></div>
+        <div class="stat"><h3><span class="count" data-target="500">0</span> Мбит/с</h3><p>Скорость</p></div>
+      </div>
+    </div>
+
+    <div id="premium" class="tab-content">
+      <h2>FASTDROP PRO</h2>
+      <div class="premium">
+        <div class="price">99 ₽ / месяц</div>
+        <ul>
+          <li>Безлимит</li>
+          <li>Пароль</li>
+          <li>1 Гбит/с</li>
+        </ul>
+        <button>КУПИТЬ</button>
+      </div>
+    </div>
+
+    <div id="about" class="tab-content">
+      <h2>О нас</h2>
+      <p>FASTDROP — просто, быстро, без рекламы.</p>
+    </div>
+
+    <div id="privacy" class="tab-content">
+      <h2>Конфиденциальность</h2>
+      <p>Файлы удаляются через 7 дней. Никаких логов.</p>
+    </div>
+  </main>
+
+  <footer>
+    © 2025 FASTDROP
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
