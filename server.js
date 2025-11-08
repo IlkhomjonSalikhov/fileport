@@ -1,3 +1,28 @@
+const express = require('express');
+const multer = require('multer');
+const { v4: uuidv4 } = require('uuid');
+const path = require('path');
+const fs = require('fs-extra');
+const cors = require('cors');
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+const PORT = process.env.PORT || 3000;
+const UPLOAD_DIR = '/app/uploads';
+fs.ensureDirSync(UPLOAD_DIR);
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, UPLOAD_DIR),
+  filename: (req, file, cb) => {
+    const id = uuidv4().slice(0, 12);
+    cb(null, id + path.extname(file.originalname));
+  }
+});
+const upload = multer({ storage });
+
 app.get('/', (req, res) => {
   res.send(`
 <!DOCTYPE html>
@@ -268,4 +293,75 @@ app.get('/', (req, res) => {
 </body>
 </html>
   `);
+});
+
+// ЗАГРУЗКА
+app.post('/upload', upload.any(), (req, res) => {
+  try {
+    const id = uuidv4().slice(0, 12);
+    const files = req.files;
+    const meta = {
+      name: files.length > 1 ? 'Архив.zip' : files[0].originalname,
+      size: files.reduce((a, f) => a + f.size, 0),
+      uploaded: new Date().toISOString(),
+      downloads: 0
+    };
+    fs.writeJsonSync(path.join(UPLOAD_DIR, id + '.json'), meta);
+    files.forEach(f => fs.renameSync(f.path, path.join(UPLOAD_DIR, id + '_' + f.originalname)));
+    setTimeout(() => {
+      files.forEach(f => fs.remove(path.join(UPLOAD_DIR, id + '_' + f.originalname)).catch(() => {}));
+      fs.remove(path.join(UPLOAD_DIR, id + '.json')).catch(() => {});
+    }, 7 * 24 * 60 * 60 * 1000);
+    res.json({ id });
+  } catch (err) {
+    res.status(500).json({ error: 'Upload failed' });
+  }
+});
+
+app.get('/:id', (req, res) => {
+  const id = req.params.id;
+  const metaPath = path.join(UPLOAD_DIR, id + '.json');
+  if (!fs.existsSync(metaPath)) return res.status(404).send('Файл удалён');
+  const meta = fs.readJsonSync(metaPath);
+  meta.downloads++;
+  fs.writeJsonSync(metaPath, meta);
+  const sizeMB = (meta.size / (1024 * 1024)).toFixed(1);
+  res.send(`<html><head><title>${meta.name}</title><style>body{background:#0a0a1a;color:#e2e8f0;display:flex;align-items:center;justify-content:center;height:100vh;font-family:Inter}h2{color:#00d4ff}.size{font-size:16px;color:#94a3b8}.btn{background:#00d4ff;color:#000;padding:16px 32px;border-radius:12px;text-decoration:none;font-weight:700}</style></head><body><div><h2>${meta.name}</h2><p class="size">${sizeMB} МБ • Загрузок: ${meta.downloads}</p><p>Скачивание через 2 сек...</p><a href="/dl/${id}" class="btn">СКАЧАТЬ</a></div><script>setTimeout(() => location.href="/dl/${id}", 2000);</script></body></html>`);
+});
+
+app.get('/dl/:id', (req, res) => {
+  const id = req.params.id;
+  const metaPath = path.join(UPLOAD_DIR, id + '.json');
+  if (!fs.existsSync(metaPath)) return res.status(404).send('Файл удалён');
+  const meta = fs.readJsonSync(metaPath);
+  const files = fs.readdirSync(UPLOAD_DIR).filter(f => f.startsWith(id + '_'));
+  if (files.length === 1) {
+    const filePath = path.join(UPLOAD_DIR, files[0]);
+    res.download(filePath, meta.name);
+  } else {
+    res.send('ZIP в разработке...');
+  }
+});
+
+app.get('/stats/:id', (req, res) => {
+  const metaPath = path.join(UPLOAD_DIR, req.params.id + '.json');
+  if (!fs.existsSync(metaPath)) return res.json({ downloads: 0 });
+  const meta = fs.readJsonSync(metaPath);
+  res.json({ downloads: meta.downloads });
+});
+
+app.get('/manifest.json', (req, res) => {
+  res.json({
+    name: "FASTDROP", short_name: "FASTDROP", start_url: "/", display: "standalone",
+    background_color: "#0a0a1a", theme_color: "#00d4ff",
+    icons: [{ src: "/icon.png", sizes: "192x192", type: "image/png" }]
+  });
+});
+
+app.get('/sw.js', (req, res) => {
+  res.send(`self.addEventListener('install', e => self.skipWaiting());`);
+});
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log('FASTDROP 10.0 запущен на порту ' + PORT);
 });
